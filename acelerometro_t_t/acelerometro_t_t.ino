@@ -7,6 +7,7 @@ float roll, pitch, yaw;
 float AccErrorX, AccErrorY, GyroErrorX, GyroErrorY, GyroErrorZ;
 float elapsedTime, currentTime, previousTime;
 int c = 0;
+int v_stop = 0;
 
 //BUTTON DOWN_ BUTTON UP
 int estado_act;
@@ -21,12 +22,15 @@ void setup() {
   Wire.write(0x00);            
   Wire.endTransmission(true);  
   
-  calculate_IMU_error();
+  //calculate_IMU_error();
   delay(20);
 }
 void loop() {
-  
- 
+  if(v_stop == 0)
+  {
+    calculate_IMU_error();
+    v_stop++;
+    }
   Wire.beginTransmission(MPU);
   Wire.write(0x3B); 
   Wire.endTransmission(false);
@@ -36,13 +40,9 @@ void loop() {
   AccX = (Wire.read() << 8 | Wire.read()) / 16384.0; 
   AccY = (Wire.read() << 8 | Wire.read()) / 16384.0; 
   AccZ = (Wire.read() << 8 | Wire.read()) / 16384.0; 
-/*
-  accAngleX = (atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180 / PI) + 6.63; 
-  accAngleY = (atan(-1 * AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180 / PI) + 4.03; 
-  */
 
-  accAngleX = (atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180 / PI)+ AccErrorX; 
-  accAngleY = (atan(-1 * AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180 / PI)+ AccErrorY;
+  accAngleX = (atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180 / PI)- AccErrorX; 
+  accAngleY = (atan(-1 * AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180 / PI)- AccErrorY;
   
   previousTime = currentTime;        
   currentTime = millis();            
@@ -55,9 +55,9 @@ void loop() {
   GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
   GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
   
-  GyroX = GyroX + GyroErrorX; 
-  GyroY = GyroY + GyroErrorY; 
-  GyroZ = GyroZ + GyroErrorZ; 
+  GyroX = GyroX - GyroErrorX; 
+  GyroY = GyroY - GyroErrorY; 
+  GyroZ = GyroZ - GyroErrorZ; 
   
   gyroAngleX = gyroAngleX + GyroX * elapsedTime; 
   gyroAngleY = gyroAngleY + GyroY * elapsedTime;
@@ -70,7 +70,6 @@ void loop() {
 
   Serial.println(int(roll));
   Serial.println(int(pitch));
-
   Presionar();
   
 }
@@ -112,17 +111,6 @@ void calculate_IMU_error() {
   GyroErrorX = GyroErrorX / 200;
   GyroErrorY = GyroErrorY / 200;
   GyroErrorZ = GyroErrorZ / 200;
-  /*
-  Serial.print("AccErrorX: ");
-  Serial.println(AccErrorX);
-  Serial.print("AccErrorY: ");
-  Serial.println(AccErrorY);
-  Serial.print("GyroErrorX: ");
-  Serial.println(GyroErrorX);
-  Serial.print("GyroErrorY: ");
-  Serial.println(GyroErrorY);
-  Serial.print("GyroErrorZ: ");
-  Serial.println(GyroErrorZ);*/
 }
 
 void Presionar()
